@@ -25,10 +25,10 @@ jobs:
     - name: Run Newman Tests
       id: newman
       run: |
-        newman run DEVVO.postman_collection.json || echo "Newman tests failed, but continuing..."
+        newman run DEVVO.postman_collection.json -r htmlextra --reporter-htmlextra-export newman-report.html
       continue-on-error: true
 
     - name: Notify Slack on Failure
-      if: failure()
+      if: steps.newman.outcome == 'failure'
       run: |
         curl -X POST -H 'Content-type: application/json' --data '{"text": "🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório."}' https://hooks.slack.com/services/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
