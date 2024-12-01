@@ -33,4 +33,5 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
       run: |
-        curl -X POST -H 'Content-type: application/json' --data '{"text": "🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório."}' $SLACK_WEBHOOK_URL
+        echo "Sending Slack notification with payload: {\"text\": \"🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório.\"}"
+        curl -v -X POST -H "Content-type: application/json" --data "{\"text\": \"🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório.\"}" "$SLACK_WEBHOOK_URL"
