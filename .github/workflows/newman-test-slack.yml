@@ -1,0 +1,35 @@
+name: Run Newman Tests and Notify Slack
+
+on:
+  push:
+    branches:
+      - main  # Escolha o branch que desejar monitorar
+  pull_request:
+
+jobs:
+  run-newman-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Newman
+      run: npm install -g newman newman-reporter-htmlextra
+
+    - name: Run Newman Tests
+      id: newman
+      run: newman run DEVVO.postman_collection.json -r htmlextra --reporter-htmlextra-export newman-report.html
+      continue-on-error: true
+
+    - name: Notify Slack on Failure
+      if: failure()
+      run: |
+        curl -X POST -H 'Content-type: application/json' --data \
+        '{"text": "🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório."}' \
+        https://hooks.slack.com/services/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
