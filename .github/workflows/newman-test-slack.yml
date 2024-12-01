@@ -14,25 +14,21 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        
-    - name: Install Newman
-      run: npm install -g newman newman-reporter-htmlextra
+    - name: Install Dependencies
+      run: |
+        # Install Node.js
+        npm install -g newman newman-reporter-htmlextra
 
-      - name: List files for debugging
-        run: ls -al
+    - name: List files for debugging
+      run: ls -al
 
     - name: Run Newman Tests
       id: newman
-      run: newman run DEVVO.postman_collection.json -r htmlextra --reporter-htmlextra-export newman-report.html || echo "Newman tests failed, but continuing...
+      run: |
+        newman run DEVVO.postman_collection.json -r htmlextra --reporter-htmlextra-export newman-report.html || echo "Newman tests failed, but continuing..."
       continue-on-error: true
 
     - name: Notify Slack on Failure
       if: failure()
       run: |
-        curl -X POST -H 'Content-type: application/json' --data \
-        '{"text": "🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório."}' \
-        https://hooks.slack.com/services/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
+        curl -X POST -H 'Content-type: application/json' --data '{"text": "🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório."}' https://hooks.slack.com/services/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
