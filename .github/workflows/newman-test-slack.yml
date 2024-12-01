@@ -3,7 +3,7 @@ name: Run Newman Tests and Notify Slack
 on:
   push:
     branches:
-      - main  # Escolha o branch que desejar monitorar
+      - master
   pull_request:
 
 jobs:
