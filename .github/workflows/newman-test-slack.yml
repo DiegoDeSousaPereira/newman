@@ -31,7 +31,7 @@ jobs:
     - name: Notify Slack on Failure
       if: steps.newman.outcome == 'failure'
       env:
-        SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
+        SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
       run: |
-        echo "Sending Slack notification with payload: {\"text\": \"🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório.\"}"
+        echo "Enviando notificação para o Slack com o payload: {\"text\": \"🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório.\"}"
         curl -v -X POST -H "Content-type: application/json" --data "{\"text\": \"🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório.\"}" "$SLACK_WEBHOOK_URL"
