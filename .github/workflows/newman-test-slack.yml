@@ -25,10 +25,12 @@ jobs:
     - name: Run Newman Tests
       id: newman
       run: |
-        newman run DEVVO.postman_collection.json -r htmlextra --reporter-htmlextra-export newman-report.html
+        newman run DEVVO.postman_collection.json
       continue-on-error: true
 
     - name: Notify Slack on Failure
       if: steps.newman.outcome == 'failure'
+      env:
+        SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
       run: |
-        curl -X POST -H 'Content-type: application/json' --data '{"text": "🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório."}' https://hooks.slack.com/services/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
+        curl -X POST -H 'Content-type: application/json' --data '{"text": "🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório."}' $SLACK_WEBHOOK_URL
