@@ -31,7 +31,7 @@ jobs:
       - name: Extract Summary from Newman Output
         if: env.NEWMAN_FAILED == 'true'
         run: |
-          TEST_SUMMARY=$(grep -A 80 -B 5 'iterations' newman-output.txt)
+          TEST_SUMMARY=$(grep -A 90 -B 4 'iterations' newman-output.txt)
           echo "TEST_SUMMARY: $TEST_SUMMARY"
           echo "TEST_SUMMARY<<EOF" >> $GITHUB_ENV
           echo "$TEST_SUMMARY" >> $GITHUB_ENV
@@ -46,4 +46,4 @@ jobs:
           echo "Enviando notificação para o Slack com payload formatado"
           curl -X POST "$SLACK_WEBHOOK_URL" \
                -H 'Content-Type: application/json' \
-               --data "$(jq -n --arg text "🚨 Testes automatizados falharam no repositório! Resumo dos testes: \n ${TEST_SUMMARY}. \n Por favor, verifique os detalhes." '{text: $text, username: "webhookbot", icon_emoji: ":ghost:"}')"
+               --data "$(jq -n --arg text "🚨 Testes automatizados falharam no repositório! Resumo dos testes:\n${TEST_SUMMARY}.\nPor favor, verifique os detalhes." '{text: $text, username: "webhookbot", icon_emoji: ":ghost:"}')"
