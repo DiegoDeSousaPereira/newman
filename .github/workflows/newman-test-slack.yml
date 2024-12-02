@@ -25,14 +25,16 @@ jobs:
       - name: Run Newman Tests
         id: newman
         run: |
-          newman run DEVVO.postman_collection.json || echo "NEWMAN_FAILED=true" >> $GITHUB_ENV
+          newman run DEVVO.postman_collection.json > newman-output.txt || echo "NEWMAN_FAILED=true" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Extract Summary from Newman Output
         if: env.NEWMAN_FAILED == 'true'
         run: |
-          TEST_SUMMARY=$(newman run DEVVO.postman_collection.json --reporters cli | grep -A 7 '┌─────────────────────────┬───────────────────┬───────────────────┐')
-          echo "TEST_SUMMARY=$TEST_SUMMARY" >> $GITHUB_ENV
+          TEST_SUMMARY=$(grep -A 7 '┌─────────────────────────┬───────────────────┬───────────────────┐' newman-output.txt)
+          echo "TEST_SUMMARY<<EOF" >> $GITHUB_ENV
+          echo "$TEST_SUMMARY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Notify Slack on Failure
         if: steps.newman.outcome == 'failure'
