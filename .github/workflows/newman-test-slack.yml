@@ -37,7 +37,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Notify Slack on Failure
-        if: steps.newman.outcome == 'failure'
+        if: env.NEWMAN_FAILED == 'true'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           TEST_SUMMARY: ${{ env.TEST_SUMMARY }}
