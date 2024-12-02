@@ -25,25 +25,15 @@ jobs:
       - name: Run Newman Tests
         id: newman
         run: |
-          newman run DEVVO.postman_collection.json > newman-output.txt || echo "NEWMAN_FAILED=true" >> $GITHUB_ENV
+          newman run DEVVO.postman_collection.json
         continue-on-error: true
 
-      - name: Extract Summary from Newman Output
-        if: env.NEWMAN_FAILED == 'true'
-        run: |
-          TEST_SUMMARY=$(grep -A 90 -B 4 'iterations' newman-output.txt)
-          echo "TEST_SUMMARY: $TEST_SUMMARY"
-          echo "TEST_SUMMARY<<EOF" >> $GITHUB_ENV
-          echo "$TEST_SUMMARY" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
       - name: Notify Slack on Failure
-        if: env.NEWMAN_FAILED == 'true'
+        if: steps.newman.outcome == 'failure'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          TEST_SUMMARY: ${{ env.TEST_SUMMARY }}
         run: |
           echo "Enviando notificação para o Slack com payload formatado"
           curl -X POST "$SLACK_WEBHOOK_URL" \
                -H 'Content-Type: application/json' \
-               --data "$(jq -n --arg text "🚨 Testes automatizados falharam no repositório! Resumo dos testes:${TEST_SUMMARY}.\nPor favor, verifique os detalhes." '{text: $text, username: "webhookbot", icon_emoji: ":ghost:"}')"
+               --data "$(jq -n --arg text "🚨 Testes automatizados falharam no repositório!.\nPor favor, verifique os detalhes." '{text: $text, username: "webhookbot", icon_emoji: ":ghost:"}')"
