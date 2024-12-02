@@ -36,7 +36,7 @@ jobs:
           path: newman-report.html
 
       - name: Notify Slack on Failure
-        if: failure()
+        if: steps.newman.outcome == 'failure'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
