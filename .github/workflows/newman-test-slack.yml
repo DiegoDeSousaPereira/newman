@@ -25,30 +25,22 @@ jobs:
       - name: Run Newman Tests
         id: newman
         run: |
-          newman run DEVVO.postman_collection.json --reporter-json-export newman-report.json || echo "NEWMAN_FAILED=true" >> $GITHUB_ENV
+          newman run DEVVO.postman_collection.json || echo "NEWMAN_FAILED=true" >> $GITHUB_ENV
         continue-on-error: true
 
-      - name: Wait for Report Generation
-        run: |
-          sleep 5
-
-      - name: Extract Failed Requests
+      - name: Extract Summary from Newman Output
         if: env.NEWMAN_FAILED == 'true'
         run: |
-          if [ -f newman-report.json ]; then
-            FAILED_REQUESTS=$(jq -r '.run.failures[] | "• " + .source.name + ": " + .error.message' newman-report.json)
-            echo "FAILED_REQUESTS=$FAILED_REQUESTS" >> $GITHUB_ENV
-          else
-            echo "Arquivo newman-report.json não encontrado. Nenhuma requisição falhou ou houve um erro inesperado."
-          fi
+          TEST_SUMMARY=$(newman run DEVVO.postman_collection.json --reporters cli | grep -A 7 '┌─────────────────────────┬───────────────────┬───────────────────┐')
+          echo "TEST_SUMMARY=$TEST_SUMMARY" >> $GITHUB_ENV
 
       - name: Notify Slack on Failure
         if: steps.newman.outcome == 'failure'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          FAILED_REQUESTS: ${{ env.FAILED_REQUESTS }}
+          TEST_SUMMARY: ${{ env.TEST_SUMMARY }}
         run: |
           echo "Enviando notificação para o Slack com payload formatado"
           curl -X POST "$SLACK_WEBHOOK_URL" \
                -H 'Content-Type: application/json' \
-               --data '{"text": "🚨 Testes automatizados falharam no repositório! As seguintes requisições falharam:\n$FAILED_REQUESTS. Por favor, verifique o relatório.", "username": "webhookbot", "icon_emoji": ":ghost:"}'
+               --data '{"text": "🚨 Testes automatizados falharam no repositório! Resumo dos testes:\n$TEST_SUMMARY. Por favor, verifique os detalhes.", "username": "webhookbot", "icon_emoji": ":ghost:"}'
