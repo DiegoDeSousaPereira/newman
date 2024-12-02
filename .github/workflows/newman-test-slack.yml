@@ -28,12 +28,19 @@ jobs:
           newman run DEVVO.postman_collection.json
         continue-on-error: true
 
+      - name: Extract Failed Requests
+        if: steps.newman.outcome == 'failure'
+        run: |
+          FAILED_REQUESTS=$(jq -r '.run.failures[] | "• " + .source.name + ": " + .error.message' newman-report.json)
+          echo "FAILED_REQUESTS=$FAILED_REQUESTS" >> $GITHUB_ENV
+
       - name: Notify Slack on Failure
         if: steps.newman.outcome == 'failure'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          FAILED_REQUESTS: ${{ env.FAILED_REQUESTS }}
         run: |
           echo "Enviando notificação para o Slack com payload formatado"
           curl -X POST "$SLACK_WEBHOOK_URL" \
                -H 'Content-Type: application/json' \
-               --data '{"text": "🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório.", "username": "webhookbot", "icon_emoji": ":ghost:"}'
+               --data '{"text": "🚨 Testes automatizados falharam no repositório! As seguintes requisições falharam:\n$FAILED_REQUESTS. Por favor, verifique o relatório.", "username": "webhookbot", "icon_emoji": ":ghost:"}'
