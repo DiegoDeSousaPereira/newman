@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Install Dependencies
@@ -19,7 +19,7 @@ jobs:
           # Install Node.js and required dependencies
           npm install -g newman
 
-      - name: List files for debugging
+      - name: List Files for Debugging
         run: ls -al
 
       - name: Run Newman Tests
@@ -29,11 +29,12 @@ jobs:
         continue-on-error: true
 
       - name: Notify Slack on Failure
-        if: steps.newman.outcome == 'failure'
+        if: failure()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           echo "Enviando notificação para o Slack com payload formatado"
+          ACTION_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           curl -X POST "$SLACK_WEBHOOK_URL" \
                -H 'Content-Type: application/json' \
-               --data "$(jq -n --arg text "🚨 Testes automatizados falharam no repositório! Por favor, verifique os detalhes." '{text: $text, username: "webhookbot", icon_emoji: ":ghost:"}')"
+               --data "$(jq -n --arg text "🚨 Testes automatizados falharam no repositório! Verifique os detalhes em $ACTION_URL" '{text: $text, username: "webhookbot", icon_emoji: ":ghost:"}')"
