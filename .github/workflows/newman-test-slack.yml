@@ -25,7 +25,7 @@ jobs:
       - name: Run Newman Tests
         id: newman
         run: |
-          newman run DEVVO.postman_collection.json --reporters cli,htmlextra --reporter-htmlextra-export newman-report.html
+          newman run DEVVO.postman_collection.json --reporters cli,htmlextra --reporter-htmlextra-export newman-report.html || echo "NEWMAN_FAILED=true" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Archive Test Results
@@ -35,6 +35,12 @@ jobs:
           name: newman-report
           path: newman-report.html
 
+      - name: Extract Failed Requests
+        if: env.NEWMAN_FAILED == 'true'
+        run: |
+          FAILED_REQUESTS=$(cat newman-report.html | grep -oP '(?<=<span class="failures">).*?(?=</span>)')
+          echo "FAILED_REQUESTS=$FAILED_REQUESTS" >> $GITHUB_ENV
+
       - name: Notify Slack on Failure
         if: steps.newman.outcome == 'failure'
         env:
@@ -43,4 +49,4 @@ jobs:
           echo "Enviando notificação para o Slack com payload formatado"
           curl -X POST "$SLACK_WEBHOOK_URL" \
                -H 'Content-Type: application/json' \
-               --data '{"text": "🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório em anexo.", "username": "webhookbot", "icon_emoji": ":ghost:"}'
+               --data '{"text": "🚨 Testes automatizados falharam no repositório! As seguintes requisições falharam: $FAILED_REQUESTS. Por favor, verifique o relatório em anexo.", "username": "webhookbot", "icon_emoji": ":ghost:"}'
