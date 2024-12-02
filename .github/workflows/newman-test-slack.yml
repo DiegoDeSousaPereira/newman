@@ -11,27 +11,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Install Dependencies
-      run: |
-        # Install Node.js
-        npm install -g newman newman-reporter-htmlextra
+      - name: Install Dependencies
+        run: |
+          # Install Node.js and required dependencies
+          npm install -g newman newman-reporter-htmlextra
 
-    - name: List files for debugging
-      run: ls -al
+      - name: List files for debugging
+        run: ls -al
 
-    - name: Run Newman Tests
-      id: newman
-      run: |
-        newman run DEVVO.postman_collection.json
-      continue-on-error: true
+      - name: Run Newman Tests
+        id: newman
+        run: |
+          newman run DEVVO.postman_collection.json --reporters cli,htmlextra --reporter-htmlextra-export newman-report.html
+        continue-on-error: true
 
-    - name: Notify Slack on Failure
-      if: steps.newman.outcome == 'failure'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      run: |
-        echo "Enviando notificação para o Slack com payload formatado"
-        curl -X POST --data-urlencode "payload={\"channel\": \"#my-channel-here\", \"username\": \"webhookbot\", \"text\": \"🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório.\", \"icon_emoji\": \":ghost:\"}" "$SLACK_WEBHOOK_URL"
+      - name: Archive Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: newman-report
+          path: newman-report.html
+
+      - name: Notify Slack on Failure
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          echo "Enviando notificação para o Slack com payload formatado"
+          curl -X POST "$SLACK_WEBHOOK_URL" \
+               -H 'Content-Type: application/json' \
+               --data '{"text": "🚨 Testes automatizados falharam no repositório! Por favor, verifique o relatório em anexo.", "username": "webhookbot", "icon_emoji": ":ghost:"}'
