@@ -25,7 +25,7 @@ jobs:
       - name: Run Newman Tests
         id: newman
         run: |
-          newman run DEVVO.postman_collection.json
+          newman run DEVVO.postman_collection.json --reporter-json-export newman-report.json
         continue-on-error: true
 
       - name: Extract Failed Requests
