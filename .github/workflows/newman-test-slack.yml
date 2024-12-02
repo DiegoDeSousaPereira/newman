@@ -28,6 +28,10 @@ jobs:
           newman run DEVVO.postman_collection.json --reporter-json-export newman-report.json || echo "NEWMAN_FAILED=true" >> $GITHUB_ENV
         continue-on-error: true
 
+      - name: Wait for Report Generation
+        run: |
+          sleep 5
+
       - name: Extract Failed Requests
         if: env.NEWMAN_FAILED == 'true'
         run: |
