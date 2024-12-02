@@ -46,5 +46,4 @@ jobs:
           echo "Enviando notificação para o Slack com payload formatado"
           curl -X POST "$SLACK_WEBHOOK_URL" \
                -H 'Content-Type: application/json' \
-               --data "{\"text\": \"🚨 Testes automatizados falharam no repositório! Resumo dos testes:
-                ${TEST_SUMMARY}. Por favor, verifique os detalhes.\", \"username\": \"webhookbot\", \"icon_emoji\": ":ghost:"}"
+               --data "$(jq -n --arg text "🚨 Testes automatizados falharam no repositório! Resumo dos testes:\n${TEST_SUMMARY}. Por favor, verifique os detalhes." '{text: $text, username: "webhookbot", icon_emoji: ":ghost:"}')"
