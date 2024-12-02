@@ -25,7 +25,7 @@ jobs:
       - name: Run Newman Tests
         id: newman
         run: |
-          newman run DEVVO.postman_collection.json --reporters cli,htmlextra --reporter-htmlextra-export newman-report.html || echo "NEWMAN_FAILED=true" >> $GITHUB_ENV
+          newman run DEVVO.postman_collection.json --reporters cli,htmlextra --reporter-htmlextra-export newman-report.json || echo "NEWMAN_FAILED=true" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Archive Test Results
@@ -33,12 +33,12 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: newman-report
-          path: newman-report.html
+          path: newman-report.json
 
       - name: Extract Failed Requests
         if: env.NEWMAN_FAILED == 'true'
         run: |
-          FAILED_REQUESTS=$(cat newman-report.html | grep -oP '(?<=<span class="failures">).*?(?=</span>)')
+          FAILED_REQUESTS=$(jq -r '.run.failures[] | "• " + .source.name + ": " + .error.message' newman-report.json)
           echo "FAILED_REQUESTS=$FAILED_REQUESTS" >> $GITHUB_ENV
 
       - name: Notify Slack on Failure
@@ -49,4 +49,4 @@ jobs:
           echo "Enviando notificação para o Slack com payload formatado"
           curl -X POST "$SLACK_WEBHOOK_URL" \
                -H 'Content-Type: application/json' \
-               --data '{"text": "🚨 Testes automatizados falharam no repositório! As seguintes requisições falharam: $FAILED_REQUESTS. Por favor, verifique o relatório em anexo.", "username": "webhookbot", "icon_emoji": ":ghost:"}'
+               --data '{"text": "🚨 Testes automatizados falharam no repositório! As seguintes requisições falharam:\n$FAILED_REQUESTS. Por favor, verifique o relatório em anexo.", "username": "webhookbot", "icon_emoji": ":ghost:"}'
