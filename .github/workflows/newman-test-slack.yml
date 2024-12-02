@@ -31,7 +31,7 @@ jobs:
       - name: Extract Summary from Newman Output
         if: env.NEWMAN_FAILED == 'true'
         run: |
-          TEST_SUMMARY=$(grep -A 7 'iterations' newman-output.txt)
+          TEST_SUMMARY=$(grep -A 20 'iterations' newman-output.txt)
           echo "TEST_SUMMARY: $TEST_SUMMARY"
           echo "TEST_SUMMARY<<EOF" >> $GITHUB_ENV
           echo "$TEST_SUMMARY" >> $GITHUB_ENV
