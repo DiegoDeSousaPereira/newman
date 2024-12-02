@@ -25,14 +25,18 @@ jobs:
       - name: Run Newman Tests
         id: newman
         run: |
-          newman run DEVVO.postman_collection.json --reporter-json-export newman-report.json
+          newman run DEVVO.postman_collection.json --reporter-json-export newman-report.json || echo "NEWMAN_FAILED=true" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Extract Failed Requests
-        if: steps.newman.outcome == 'failure'
+        if: env.NEWMAN_FAILED == 'true'
         run: |
-          FAILED_REQUESTS=$(jq -r '.run.failures[] | "• " + .source.name + ": " + .error.message' newman-report.json)
-          echo "FAILED_REQUESTS=$FAILED_REQUESTS" >> $GITHUB_ENV
+          if [ -f newman-report.json ]; then
+            FAILED_REQUESTS=$(jq -r '.run.failures[] | "• " + .source.name + ": " + .error.message' newman-report.json)
+            echo "FAILED_REQUESTS=$FAILED_REQUESTS" >> $GITHUB_ENV
+          else
+            echo "Arquivo newman-report.json não encontrado. Nenhuma requisição falhou ou houve um erro inesperado."
+          fi
 
       - name: Notify Slack on Failure
         if: steps.newman.outcome == 'failure'
